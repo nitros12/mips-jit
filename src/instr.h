@@ -3,40 +3,60 @@
 
 #include <stdint.h>
 
+#include "reg.h"
 #include "str_slice.h"
 
 // representations for instructions
 
-enum instr_type {
-  INSTR_NOP,
-  INSTR_ADD,
-  INSTR_ADDI,
-  INSTR_ANDI,
-  INSTR_SRL,
-  INSTR_SLL,
-  INSTR_BEQ,
-  INSTE_BNE
+enum __attribute__((__packed__)) instr_type {
+    INSTR_NOP,
+    INSTR_ADD,
+    INSTR_ADDI,
+    INSTR_ANDI,
+    INSTR_SRL,
+    INSTR_SLL,
+    INSTR_BEQ,
+    INSTR_BNE
 };
+
+enum __attribute__((__packed__)) instr_class {
+    INSTR_CLASS_REG,
+    INSTR_CLASS_IMM,
+    INSTR_CLASS_BRANCH,
+    INSTR_CLASS_NOP
+};
+
+extern const char *const instr_type_names[];
+
+extern const enum instr_class instr_class_map[];
 
 // d = s <op> t
 struct instr_reg {
-  uint8_t d, s, t;
+    enum reg_type d, s, t;
 };
 
 // t = s <op> imm
-// also used for jumps
 struct instr_imm {
-  uint8_t t, s;
-  uint16_t imm;
+    enum reg_type t, s;
+    uint16_t imm;
+};
+
+// branch to label instrs
+struct instr_branch {
+    enum reg_type t, s;
+    struct string_slice label;
 };
 
 struct instr {
-  enum instr_type type;
-  struct string_slice label;
-  union {
-    instr_reg reg_instr;
-    instr_imm imm_instr;
-  };
+    enum instr_type type;
+    struct string_slice label;
+    union {
+        struct instr_reg reg_instr;
+        struct instr_imm imm_instr;
+        struct instr_branch branch_instr;
+    };
 };
+
+void print_instr(struct instr i);
 
 #endif // __INSTR_H_
