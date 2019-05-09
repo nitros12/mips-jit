@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "abstract_instr.h"
@@ -12,7 +13,8 @@ const char *const abstract_storage_type_names[] = {
 
 const char *const abstract_instr_type_names[] = {
     [ABSTRACT_INSTR_BINOP] = "ABSTRACT_INSTR_BINOP",
-    [ABSTRACT_INSTR_BRANCH] = "ABSTRACT_INSTR_BRANCH"};
+    [ABSTRACT_INSTR_BRANCH] = "ABSTRACT_INSTR_BRANCH",
+    [ABSTRACT_INSTR_MOV] = "ABSTRACT_INSTR_MOV"};
 
 const char *const abstract_instr_binop_op_names[] = {
     [ABSTRACT_INSTR_BINOP_ADD] = "+",
@@ -127,6 +129,51 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
     return res_vec;
 }
 
+static bool optimise_abstract_instrs_inner(struct abstract_instr_vec *instrs) {
+    bool did_change = false;
+
+    for (size_t i = 0; i < instrs->len; i++) {
+        struct abstract_instr instr = instrs->data[i];
+
+        switch (instr.type) {
+        case ABSTRACT_INSTR_BINOP:
+            // transform 'd <- 0 + a' or 'd <- a + 0' into 'd <- a'
+            if (instr.binop.op == ABSTRACT_INSTR_BINOP_ADD) {
+                if (instr.binop.lhs.type == ABSTRACT_STORAGE_IMM &&
+                    instr.binop.lhs.imm == 0) {
+                    instrs->data[i] = (struct abstract_instr){
+                        .type = ABSTRACT_INSTR_MOV,
+                        .mov = {.dest = instr.binop.dest,
+                                .source = instr.binop.rhs}};
+                    did_change = true;
+                } else if (instr.binop.rhs.type == ABSTRACT_STORAGE_IMM &&
+                           instr.binop.rhs.imm == 0) {
+                    instrs->data[i] = (struct abstract_instr){
+                        .type = ABSTRACT_INSTR_MOV,
+                        .mov = {.dest = instr.binop.dest,
+                                .source = instr.binop.lhs}};
+                    did_change = true;
+                }
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    // NOTE: the currently implemented transforms will never result in more
+    // possible optimisations so always return false currently, even if we did
+    // make a transform.
+    return false;
+    // return did_change;
+}
+
+void optimise_abstract_instrs(struct abstract_instr_vec *instrs) {
+    // fixpoint the optimisation loop
+    while (optimise_abstract_instrs_inner(instrs)) {
+    }
+}
+
 static void print_abstract_storage(struct abstract_storage s) {
     switch (s.type) {
     case ABSTRACT_STORAGE_REG:
@@ -150,11 +197,15 @@ void print_abstract_instr(struct abstract_instr i) {
         printf(">\n");
         break;
     case ABSTRACT_INSTR_BRANCH:
-        printf(" if ");
+        printf(", if ");
         print_abstract_storage(i.branch.lhs);
         printf(" %s ", abstract_instr_branch_test_type_names[i.branch.type]);
         print_abstract_storage(i.branch.rhs);
         printf(" goto %.*s>\n", (int)i.branch.label.len, i.branch.label.s);
         break;
+    case ABSTRACT_INSTR_MOV:
+        printf(", %s <- ", reg_type_names[i.mov.dest]);
+        print_abstract_storage(i.mov.source);
+        printf(">\n");
     }
 }

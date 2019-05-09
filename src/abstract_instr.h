@@ -33,11 +33,10 @@ struct abstract_storage {
     };
 };
 
-// TODO: implement abstract load instructions
-// TODO: optimise d <- 0 + t into d <- t
 enum __attribute__((__packed__)) abstract_instr_type {
     ABSTRACT_INSTR_BINOP,
-    ABSTRACT_INSTR_BRANCH
+    ABSTRACT_INSTR_BRANCH,
+    ABSTRACT_INSTR_MOV
 };
 
 extern const char *const abstract_instr_type_names[];
@@ -70,11 +69,17 @@ struct abstract_instr_branch {
     struct string_slice label; // we still use branch labels at this point
 };
 
+struct abstract_instr_mov {
+    enum reg_type dest;
+    struct abstract_storage source;
+};
+
 struct abstract_instr {
     enum abstract_instr_type type;
     union {
         struct abstract_instr_binop binop;
         struct abstract_instr_branch branch;
+        struct abstract_instr_mov mov;
     };
 };
 
@@ -82,6 +87,11 @@ struct abstract_instr {
  * Translate MIPS instructions into our abstract instructions.
  */
 struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs);
+
+/**
+ * Run the optimisation pass over abstract instructions.
+ */
+void optimise_abstract_instrs(struct abstract_instr_vec *instrs);
 
 void print_abstract_instr(struct abstract_instr i);
 

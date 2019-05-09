@@ -49,11 +49,14 @@ int main(int argc, char **argv) {
 
     struct abstract_instr_vec *ainstrs = translate_instructions(instrs);
 
+    instr_vec_free(instrs);
+
+    optimise_abstract_instrs(ainstrs);
+
     for (int i = 0; i < ainstrs->len; i++) {
         print_abstract_instr(ainstrs->data[i]);
     }
 
-    instr_vec_free(instrs);
     abstract_instr_vec_free(ainstrs);
 
     free(instr_buf);
