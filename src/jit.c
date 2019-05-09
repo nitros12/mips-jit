@@ -3,44 +3,12 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "abstract_instr.h"
 #include "instr.h"
 #include "instr_parse.h"
 #include "reg.h"
 #include "str_slice.h"
-
-// simple vector of instructions
-struct instr_vec {
-    struct instr *data;
-    size_t cap;
-    size_t len;
-};
-
-static struct instr_vec *instr_vec_new(void) {
-    const size_t initial_cap = 8;
-
-    struct instr *data = calloc(initial_cap, sizeof(struct instr));
-    struct instr_vec *vec = malloc(sizeof(struct instr_vec));
-
-    vec->len = 0;
-    vec->cap = initial_cap;
-    vec->data = data;
-
-    return vec;
-}
-
-static void instr_vec_push(struct instr_vec *vec, struct instr i) {
-    if (vec->len == vec->cap) {
-        vec->cap <<= 1;
-        vec->data = reallocarray(vec->data, vec->cap, sizeof(struct instr));
-    }
-
-    vec->data[vec->len++] = i;
-}
-
-static void instr_vec_free(struct instr_vec *vec) {
-    free(vec->data);
-    free(vec);
-}
+#include "vec.h"
 
 static struct instr_vec *parse_instructions(char *source) {
     struct instr_vec *vec = instr_vec_new();
@@ -71,10 +39,22 @@ int main(int argc, char **argv) {
     }
 
     fread(instr_buf, st.st_size, 1, instr_file);
+    fclose(instr_file);
 
     struct instr_vec *instrs = parse_instructions(instr_buf);
 
     for (int i = 0; i < instrs->len; i++) {
         print_instr(instrs->data[i]);
     }
+
+    struct abstract_instr_vec *ainstrs = translate_instructions(instrs);
+
+    for (int i = 0; i < ainstrs->len; i++) {
+        print_abstract_instr(ainstrs->data[i]);
+    }
+
+    instr_vec_free(instrs);
+    abstract_instr_vec_free(ainstrs);
+
+    free(instr_buf);
 }

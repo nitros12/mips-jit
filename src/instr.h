@@ -5,6 +5,7 @@
 
 #include "reg.h"
 #include "str_slice.h"
+#include "vec.h"
 
 // representations for instructions
 
@@ -58,5 +59,7 @@ struct instr {
 };
 
 void print_instr(struct instr i);
+
+DEFINE_VEC(struct instr, instr);
 
 #endif // __INSTR_H_

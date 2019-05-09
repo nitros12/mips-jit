@@ -2,6 +2,9 @@
 
 #include "instr.h"
 #include "reg.h"
+#include "vec.h"
+
+MAKE_VEC(struct instr, instr);
 
 const char *const instr_type_names[] = {
     [INSTR_NOP] = "INSTR_NOP",   [INSTR_ADD] = "INSTR_ADD",
