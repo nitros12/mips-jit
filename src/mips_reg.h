@@ -7,7 +7,7 @@
 
 enum __attribute__((__packed__)) reg_type {
     REG_ZERO,
-    REG_AT, // pseudo instruction reserved (error if we see this)
+    /* REG_AT, // pseudo instruction reserved (error if we see this) */
     REG_V0,
     REG_V1,
     REG_A0,
@@ -32,12 +32,12 @@ enum __attribute__((__packed__)) reg_type {
     REG_S7,
     REG_T8,
     REG_T9,
-    REG_K0, // reserved (error if we see this)
-    REG_K1, // reserved (error if we see this)
-    REG_GP, // global area pointer (error if we see this)
-    REG_SP, // stack pointer (error if we see this)
-    REG_FP, // frame pointer (error if we see this)
-    REG_RA  // return address (error if we see this)
+    /* REG_K0, // reserved (error if we see this) */
+    /* REG_K1, // reserved (error if we see this) */
+    /* REG_GP, // global area pointer (error if we see this) */
+    /* REG_SP, // stack pointer (error if we see this) */
+    /* REG_FP, // frame pointer (error if we see this) */
+    /* REG_RA  // return address (error if we see this) */
 };
 
 extern const char *const reg_type_names[];

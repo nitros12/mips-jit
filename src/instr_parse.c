@@ -4,7 +4,7 @@
 #include "common.h"
 #include "instr.h"
 #include "instr_parse.h"
-#include "reg.h"
+#include "mips_reg.h"
 
 /**
  * Returns the position of the first non-whitespace character in a string.

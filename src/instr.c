@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "instr.h"
-#include "reg.h"
+#include "mips_reg.h"
 #include "vec.h"
 
 MAKE_VEC(struct instr, instr);

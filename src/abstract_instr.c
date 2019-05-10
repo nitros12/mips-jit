@@ -1,8 +1,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "common.h"
 #include "abstract_instr.h"
-#include "reg.h"
+#include "mips_reg.h"
 #include "vec.h"
 
 MAKE_VEC(struct abstract_instr, abstract_instr);
@@ -43,6 +44,9 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
 
         switch (instr.type) {
         case INSTR_NOP:
+            if (!NULL_SLICE(instr.label)) {
+                RUNTIME_ERROR("You have a NOP op with a label, don't do that...");
+            }
             break;
         case INSTR_ADD:
             abstract_instr_vec_push(
@@ -181,6 +185,13 @@ static void print_abstract_storage(struct abstract_storage s) {
         break;
     case ABSTRACT_STORAGE_IMM:
         printf("<imm: %d>", s.imm);
+        break;
+    case ABSTRACT_STORAGE_MAPPED_REG:
+        if (s.mapped_reg.mapped_to_reg) {
+            printf("<x86_reg %d>", s.mapped_reg.x86_reg_idx);
+        } else {
+            printf("<stack_offset %d>", s.mapped_reg.stack_offset);
+        }
         break;
     }
 }

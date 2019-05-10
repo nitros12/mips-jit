@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "reg.h"
+#include "mips_reg.h"
 #include "str_slice.h"
 #include "vec.h"
 

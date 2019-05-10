@@ -1,10 +1,14 @@
 #ifndef __ABSTRACT_INSTR_H_
 #define __ABSTRACT_INSTR_H_
 
+#include <stdbool.h>
+
 #include "instr.h"
-#include "reg.h"
+#include "mips_reg.h"
 #include "str_slice.h"
 #include "vec.h"
+
+// TODO: write register allocator
 
 /**
  * Abstract instructions
@@ -20,16 +24,29 @@
 
 enum __attribute__((__packed__)) abstract_storage_type {
     ABSTRACT_STORAGE_REG,
+    ABSTRACT_STORAGE_MAPPED_REG,
     ABSTRACT_STORAGE_IMM
 };
 
 extern const char *const abstract_storage_type_names[];
+
+/**
+ * A mips register mapped to either an x86 register or a stack offset.
+ */
+struct abstract_mapped_reg {
+    bool mapped_to_reg;
+    union {
+        uint8_t x86_reg_idx;
+        uint8_t stack_offset;
+    };
+};
 
 struct abstract_storage {
     enum abstract_storage_type type;
     union {
         uint16_t imm;
         enum reg_type reg;
+        struct abstract_mapped_reg mapped_reg;
     };
 };
 
