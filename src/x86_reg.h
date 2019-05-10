@@ -1,6 +1,8 @@
 #ifndef __X86_REG_H_
 #define __X86_REG_H_
 
+#include <stdbool.h>
+
 /**
  * X86 registers.
  */
@@ -10,9 +12,9 @@ enum __attribute__((__packed__)) x86_reg_type {
     ECX,
     EDX,
     EBX,
+    ESI,
+    EDI,
     R8D,
-    RSI,
-    RDI,
     R9D,
     R10D,
     R11D,
