@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "mips_reg.h"
-#include "str_slice.h"
+#include "label.h"
 #include "vec.h"
 
 // representations for instructions
@@ -45,12 +45,12 @@ struct instr_imm {
 // branch to label instrs
 struct instr_branch {
     enum reg_type t, s;
-    struct string_slice label;
+    struct label *label;
 };
 
 struct instr {
     enum instr_type type;
-    struct string_slice label;
+    struct label *label;
     union {
         struct instr_reg reg_instr;
         struct instr_imm imm_instr;

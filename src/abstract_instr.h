@@ -5,7 +5,7 @@
 
 #include "instr.h"
 #include "mips_reg.h"
-#include "str_slice.h"
+#include "label.h"
 #include "vec.h"
 
 // TODO: write register allocator
@@ -83,7 +83,7 @@ extern const char *const abstract_instr_branch_test_type_names[];
 struct abstract_instr_branch {
     enum abstract_instr_branch_test_type type;
     struct abstract_storage lhs, rhs;
-    struct string_slice label; // we still use branch labels at this point
+    struct label *label; // we still use branch labels at this point
 };
 
 struct abstract_instr_mov {
@@ -92,6 +92,7 @@ struct abstract_instr_mov {
 };
 
 struct abstract_instr {
+    struct label *label;
     enum abstract_instr_type type;
     union {
         struct abstract_instr_binop binop;

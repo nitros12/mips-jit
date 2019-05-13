@@ -21,8 +21,8 @@ const enum instr_class instr_class_map[] = {
 void print_instr(struct instr i) {
     printf("<instr %s", instr_type_names[i.type]);
 
-    if (i.label.s)
-        printf(", label: %.*s", (int)i.label.len, i.label.s);
+    if (i.label)
+        printf(", label: %.*s", (int)i.label->name.len, i.label->name.s);
 
     switch (instr_class_map[i.type]) {
     case INSTR_CLASS_NOP:
@@ -37,10 +37,11 @@ void print_instr(struct instr i) {
                reg_type_names[i.imm_instr.s], i.imm_instr.imm);
         break;
     case INSTR_CLASS_BRANCH:
-        printf(", t: %s, s: %s, label: %.*s>\n",
+        printf(", t: %s, s: %s, label: <label %.*s, id: %ud>>\n",
                reg_type_names[i.branch_instr.t],
-               reg_type_names[i.branch_instr.s], (int)i.branch_instr.label.len,
-               i.branch_instr.label.s);
+               reg_type_names[i.branch_instr.s],
+               (int)i.branch_instr.label->name.len,
+               i.branch_instr.label->name.s, i.branch_instr.label->id);
         break;
     }
 }

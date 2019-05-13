@@ -1,8 +1,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "common.h"
 #include "abstract_instr.h"
+#include "common.h"
+#include "label_storage.h"
 #include "mips_reg.h"
 #include "vec.h"
 
@@ -44,14 +45,16 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
 
         switch (instr.type) {
         case INSTR_NOP:
-            if (!NULL_SLICE(instr.label)) {
-                RUNTIME_ERROR("You have a NOP op with a label, don't do that...");
+            if (instr.label != NULL) {
+                RUNTIME_ERROR(
+                    "You have a NOP op with a label, don't do that...");
             }
             break;
         case INSTR_ADD:
             abstract_instr_vec_push(
                 res_vec, (struct abstract_instr){
                              .type = ABSTRACT_INSTR_BINOP,
+                             .label = instr.label,
                              .binop = {
                                  .dest = instr.reg_instr.d,
                                  .op = ABSTRACT_INSTR_BINOP_ADD,
@@ -63,6 +66,7 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
             abstract_instr_vec_push(
                 res_vec, (struct abstract_instr){
                              .type = ABSTRACT_INSTR_BINOP,
+                             .label = instr.label,
                              .binop = {
                                  .dest = instr.imm_instr.t,
                                  .op = ABSTRACT_INSTR_BINOP_ADD,
@@ -75,6 +79,7 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
             abstract_instr_vec_push(
                 res_vec, (struct abstract_instr){
                              .type = ABSTRACT_INSTR_BINOP,
+                             .label = instr.label,
                              .binop = {
                                  .dest = instr.imm_instr.t,
                                  .op = ABSTRACT_INSTR_BINOP_AND,
@@ -87,6 +92,7 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
             abstract_instr_vec_push(
                 res_vec, (struct abstract_instr){
                              .type = ABSTRACT_INSTR_BINOP,
+                             .label = instr.label,
                              .binop = {
                                  .dest = instr.imm_instr.t,
                                  .op = ABSTRACT_INSTR_BINOP_SRL,
@@ -99,6 +105,7 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
             abstract_instr_vec_push(
                 res_vec, (struct abstract_instr){
                              .type = ABSTRACT_INSTR_BINOP,
+                             .label = instr.label,
                              .binop = {
                                  .dest = instr.imm_instr.t,
                                  .op = ABSTRACT_INSTR_BINOP_SLL,
@@ -112,6 +119,7 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
                 res_vec,
                 (struct abstract_instr){
                     .type = ABSTRACT_INSTR_BRANCH,
+                    .label = instr.label,
                     .branch = {.type = ABSTRACT_INSTR_BRANCH_TEST_EQ,
                                .lhs = translate_reg(instr.branch_instr.t),
                                .rhs = translate_reg(instr.branch_instr.s),
@@ -122,6 +130,7 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
                 res_vec,
                 (struct abstract_instr){
                     .type = ABSTRACT_INSTR_BRANCH,
+                    .label = instr.label,
                     .branch = {.type = ABSTRACT_INSTR_BRANCH_TEST_NE,
                                .lhs = translate_reg(instr.branch_instr.t),
                                .rhs = translate_reg(instr.branch_instr.s),
@@ -199,6 +208,9 @@ static void print_abstract_storage(struct abstract_storage s) {
 void print_abstract_instr(struct abstract_instr i) {
     printf("<ainstr %s", abstract_instr_type_names[i.type]);
 
+    if (i.label)
+        printf(", label: %.*s", (int)i.label->name.len, i.label->name.s);
+
     switch (i.type) {
     case ABSTRACT_INSTR_BINOP:
         printf(", %s <- ", reg_type_names[i.binop.dest]);
@@ -212,7 +224,8 @@ void print_abstract_instr(struct abstract_instr i) {
         print_abstract_storage(i.branch.lhs);
         printf(" %s ", abstract_instr_branch_test_type_names[i.branch.type]);
         print_abstract_storage(i.branch.rhs);
-        printf(" goto %.*s>\n", (int)i.branch.label.len, i.branch.label.s);
+        printf(" goto <label: %.*s, id: %ud>>\n", (int)i.branch.label->name.len,
+               i.branch.label->name.s, i.branch.label->id);
         break;
     case ABSTRACT_INSTR_MOV:
         printf(", %s <- ", reg_type_names[i.mov.dest]);

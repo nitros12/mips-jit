@@ -1,9 +1,9 @@
 #ifndef __LABEL_VEC_H_
 #define __LABEL_VEC_H_
 
-#include "str_slice.h"
+#include "label.h"
 #include "vec.h"
 
-DEFINE_VEC(struct string_slice, labels);
+DEFINE_VEC(struct label, labels);
 
 #endif // __LABEL_VEC_H_

@@ -4,6 +4,7 @@
 #include "common.h"
 #include "instr.h"
 #include "instr_parse.h"
+#include "label_storage.h"
 #include "mips_reg.h"
 
 /**
@@ -165,7 +166,7 @@ static struct instr_branch parse_instr_branch(const char *instr) {
     enum reg_type s = parse_reg_type(&instr);
     eat_whitespace(&instr);
 
-    struct string_slice label = parse_word(&instr);
+    struct label *label = add_label(parse_word(&instr));
 
     return (struct instr_branch){.s = s, .t = t, .label = label};
 }
@@ -186,12 +187,12 @@ struct instr parse_instr(const char *instr) {
 
     DEBUG_LOG("instr: %s", instr);
     // first search for a colon, if so parse a label
-    struct string_slice s = {NULL, 0};
+    struct label *label = NULL;
 
     const char *label_ptr = NULL;
     if ((label_ptr = strchr(instr, ':')) != NULL) {
-        s.s = instr;
-        s.len = label_ptr - instr;
+        struct string_slice s = {.s = instr, .len = label_ptr - instr};
+        label = add_label(s);
 
         // consume any whitespace between the label and the start of the
         // instruction
@@ -214,38 +215,41 @@ struct instr parse_instr(const char *instr) {
 
     switch (instr_char_sum) {
     case 333:
-        return (struct instr){.type = INSTR_NOP, .label = s};
+        return (struct instr){.type = INSTR_NOP, .label = label};
         break;
     case 297:
-        return (struct instr){
-            .type = INSTR_ADD, .label = s, .reg_instr = parse_instr_reg(instr)};
+        return (struct instr){.type = INSTR_ADD,
+                              .label = label,
+                              .reg_instr = parse_instr_reg(instr)};
         break;
     case 402:
         return (struct instr){.type = INSTR_ADDI,
-                              .label = s,
+                              .label = label,
                               .imm_instr = parse_instr_imm(instr)};
         break;
     case 412:
         return (struct instr){.type = INSTR_ANDI,
-                              .label = s,
+                              .label = label,
                               .imm_instr = parse_instr_imm(instr)};
         break;
     case 337:
-        return (struct instr){
-            .type = INSTR_SRL, .label = s, .imm_instr = parse_instr_imm(instr)};
+        return (struct instr){.type = INSTR_SRL,
+                              .label = label,
+                              .imm_instr = parse_instr_imm(instr)};
         break;
     case 331:
-        return (struct instr){
-            .type = INSTR_SLL, .label = s, .imm_instr = parse_instr_imm(instr)};
+        return (struct instr){.type = INSTR_SLL,
+                              .label = label,
+                              .imm_instr = parse_instr_imm(instr)};
         break;
     case 312:
         return (struct instr){.type = INSTR_BEQ,
-                              .label = s,
+                              .label = label,
                               .branch_instr = parse_instr_branch(instr)};
         break;
     case 309:
         return (struct instr){.type = INSTR_BNE,
-                              .label = s,
+                              .label = label,
                               .branch_instr = parse_instr_branch(instr)};
         break;
     default:
