@@ -8,11 +8,11 @@
  */
 
 enum __attribute__((__packed__)) x86_reg_type {
-    EAX,
+    EAX = 0,
     ECX,
     EDX,
     EBX,
-    ESI,
+    ESI = 6,
     EDI,
     R8D,
     R9D,
@@ -21,7 +21,10 @@ enum __attribute__((__packed__)) x86_reg_type {
     R12D,
     R13D,
     R14D,
-    R15D
+    R15D,
+
+    SMALLEST_X86_REG = ECX, // EAX is reserved for temporaries
+    LARGEST_X86_REG = R15D
 };
 
 extern const char *const x86_reg_type_names[];

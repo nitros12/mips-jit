@@ -3,7 +3,6 @@
 
 #include "label.h"
 #include "str_slice.h"
-#include "label_vec.h"
 
 /**
  * Add a label to the storage, if the label already exists: the existing label

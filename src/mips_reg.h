@@ -38,6 +38,8 @@ enum __attribute__((__packed__)) reg_type {
     /* REG_SP, // stack pointer (error if we see this) */
     /* REG_FP, // frame pointer (error if we see this) */
     /* REG_RA  // return address (error if we see this) */
+    SMALLEST_MIPS_REG = REG_ZERO,
+    LARGEST_MIPS_REG = REG_T9,
 };
 
 extern const char *const reg_type_names[];

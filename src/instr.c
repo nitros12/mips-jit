@@ -18,30 +18,30 @@ const enum instr_class instr_class_map[] = {
     [INSTR_SRL] = INSTR_CLASS_IMM,    [INSTR_SLL] = INSTR_CLASS_IMM,
     [INSTR_BEQ] = INSTR_CLASS_BRANCH, [INSTR_BNE] = INSTR_CLASS_BRANCH};
 
-void print_instr(struct instr i) {
-    printf("<instr %s", instr_type_names[i.type]);
+void print_instr(struct instr *i) {
+    printf("<instr %s", instr_type_names[i->type]);
 
-    if (i.label)
-        printf(", label: %.*s", (int)i.label->name.len, i.label->name.s);
+    if (i->label)
+        printf(", label: %.*s", (int)i->label->name.len, i->label->name.s);
 
-    switch (instr_class_map[i.type]) {
+    switch (instr_class_map[i->type]) {
     case INSTR_CLASS_NOP:
         printf(">\n");
         break;
     case INSTR_CLASS_REG:
-        printf(", d: %s, s: %s, t: %s>\n", reg_type_names[i.reg_instr.d],
-               reg_type_names[i.reg_instr.s], reg_type_names[i.reg_instr.t]);
+        printf(", d: %s, s: %s, t: %s>\n", reg_type_names[i->reg_instr.d],
+               reg_type_names[i->reg_instr.s], reg_type_names[i->reg_instr.t]);
         break;
     case INSTR_CLASS_IMM:
-        printf(", t: %s, s: %s, imm: %u>\n", reg_type_names[i.imm_instr.t],
-               reg_type_names[i.imm_instr.s], i.imm_instr.imm);
+        printf(", t: %s, s: %s, imm: %u>\n", reg_type_names[i->imm_instr.t],
+               reg_type_names[i->imm_instr.s], i->imm_instr.imm);
         break;
     case INSTR_CLASS_BRANCH:
         printf(", t: %s, s: %s, label: <label %.*s, id: %ud>>\n",
-               reg_type_names[i.branch_instr.t],
-               reg_type_names[i.branch_instr.s],
-               (int)i.branch_instr.label->name.len,
-               i.branch_instr.label->name.s, i.branch_instr.label->id);
+               reg_type_names[i->branch_instr.t],
+               reg_type_names[i->branch_instr.s],
+               (int)i->branch_instr.label->name.len,
+               i->branch_instr.label->name.s, i->branch_instr.label->id);
         break;
     }
 }

@@ -58,7 +58,7 @@ struct instr {
     };
 };
 
-void print_instr(struct instr i);
+void print_instr(struct instr *i);
 
 DEFINE_VEC(struct instr, instr);
 

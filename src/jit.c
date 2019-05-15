@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     struct instr_vec *instrs = parse_instructions(instr_buf);
 
     for (int i = 0; i < instrs->len; i++) {
-        print_instr(instrs->data[i]);
+        print_instr(&instrs->data[i]);
     }
 
     struct abstract_instr_vec *ainstrs = translate_instructions(instrs);
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     optimise_abstract_instrs(ainstrs);
 
     for (int i = 0; i < ainstrs->len; i++) {
-        print_abstract_instr(ainstrs->data[i]);
+        print_abstract_instr(&ainstrs->data[i]);
     }
 
     abstract_instr_vec_free(ainstrs);
