@@ -1,8 +1,14 @@
 #include "x86_reg.h"
 
+const enum x86_reg_type linear_free_x86_reg_map[] = {
+    EDX, EBX, ESI, EDI, R8D, R9D, R10D, R11D, R12D, R13D, R14D, R15D,
+};
+
+const int num_free_x86_regs = 12;
+
 const char *const x86_reg_type_names[] = {
     [EAX] = "EAX",   [ECX] = "ECX",   [EDX] = "EDX",   [EBX] = "EBX",
-    [ESI] = "RSI",   [R8D] = "R8D",   [EDI] = "RDI",   [R9D] = "R9D",
+    [ESI] = "RSI",   [EDI] = "EDI",   [R8D] = "R8D",   [R9D] = "R9D",
     [R10D] = "R10D", [R11D] = "R11D", [R12D] = "R12D", [R13D] = "R13D",
     [R14D] = "R14D", [R15D] = "R15D"};
 

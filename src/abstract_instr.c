@@ -257,7 +257,7 @@ static int compare_reg_count_tup(const void *a_, const void *b_) {
     const struct reg_count_tup *a = a_;
     const struct reg_count_tup *b = b_;
 
-    return (a->count > b->count) - (a->count < b->count);
+    return (a->count < b->count) - (a->count > b->count);
 }
 
 void count_instr_regs(struct abstract_instr *i,
@@ -317,10 +317,10 @@ struct mips_x86_reg_mapping map_regs(struct abstract_instr_vec *instrs) {
 
     size_t mips_reg_idx = 0;
 
-    for (enum x86_reg_type reg = SMALLEST_X86_REG; reg < LARGEST_X86_REG;
-         reg++) {
-        mapping.mapping[mips_regs[mips_reg_idx++].reg] =
-            (struct reg_mapping){.type = X86_REG_MAPPED, .x86_reg = reg};
+    for (int x86_reg_idx = 0; x86_reg_idx < num_free_x86_regs; x86_reg_idx++) {
+        mapping.mapping[mips_regs[mips_reg_idx++].reg] = (struct reg_mapping){
+            .type = X86_REG_MAPPED,
+            .x86_reg = linear_free_x86_reg_map[x86_reg_idx]};
     }
 
     uint8_t stack_offset = 0;

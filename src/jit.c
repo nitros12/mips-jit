@@ -6,9 +6,11 @@
 #include "abstract_instr.h"
 #include "instr.h"
 #include "instr_parse.h"
+#include "label_storage.h"
 #include "mips_reg.h"
 #include "str_slice.h"
 #include "vec.h"
+#include "x86_instr.h"
 
 static struct instr_vec *parse_instructions(char *source) {
     struct instr_vec *vec = instr_vec_new();
@@ -57,7 +59,32 @@ int main(int argc, char **argv) {
         print_abstract_instr(&ainstrs->data[i]);
     }
 
+    struct mips_x86_reg_mapping map = map_regs(ainstrs);
+
+    struct x86_instr_vec *x86_instrs = x86_instr_vec_new();
+    uint32_t current_offset = 0;
+
+    for (int i = 0; i < ainstrs->len; i++) {
+        struct abstract_instr *current_instr = &ainstrs->data[i];
+        if (current_instr->label != NULL) {
+            resolve_label(current_instr->label, current_offset);
+        }
+
+        realize_abstract_instruction(current_instr, &map, x86_instrs,
+                                     &current_offset);
+    }
+
     abstract_instr_vec_free(ainstrs);
+
+    for (int i = 0; i < x86_instrs->len; i++) {
+        print_x86_instr(&x86_instrs->data[i]);
+    }
+
+    uint8_t *encoded_instrs = emit_x86_instructions(x86_instrs);
+
+    x86_instr_vec_free(x86_instrs);
+
+    free(encoded_instrs);
 
     free(instr_buf);
 }

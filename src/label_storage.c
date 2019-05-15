@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <string.h>
 
 #include "label_storage.h"
@@ -35,4 +36,8 @@ struct label *lookup_label(struct string_slice s) {
     }
 
     return NULL;
+}
+
+void resolve_label(struct label *label, uint32_t code_position) {
+    label->code_position = code_position;
 }

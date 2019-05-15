@@ -3,9 +3,10 @@
 
 #include <stdint.h>
 
+#include "abstract_instr.h"
+#include "label.h"
 #include "vec.h"
 #include "x86_reg.h"
-#include "label.h"
 
 /**
  * X86 instructions
@@ -99,12 +100,24 @@ struct x86_instr construct_add_reg_reg(enum x86_reg_type dest,
                                        enum x86_reg_type src);
 struct x86_instr construct_and_reg_reg(enum x86_reg_type dest,
                                        enum x86_reg_type src);
-struct x86_instr construct_shr_reg_imm(enum x86_reg_type reg,
-                                       uint16_t imm);
-struct x86_instr construct_shl_reg_imm(enum x86_reg_type reg,
-                                       uint16_t imm);
+struct x86_instr construct_shr_reg_imm(enum x86_reg_type reg, uint16_t imm);
+struct x86_instr construct_shl_reg_imm(enum x86_reg_type reg, uint16_t imm);
 struct x86_instr construct_cmp_reg_reg(enum x86_reg_type dest,
                                        enum x86_reg_type src);
 struct x86_instr construct_jump(bool is_eq, struct label *label);
+
+/**
+ * Convert an abstract instruction into an x86 instruction.
+ * Returns the number of emitted x86 instructions for the given abstract
+ * instruction.
+ */
+void realize_abstract_instruction(struct abstract_instr *i,
+                                  struct mips_x86_reg_mapping *map,
+                                  struct x86_instr_vec *result_instrs,
+                                  uint32_t *current_offset);
+
+uint8_t *emit_x86_instructions(struct x86_instr_vec *instrs);
+
+void print_x86_instr(struct x86_instr *i);
 
 #endif // __X86_INSTR_H_

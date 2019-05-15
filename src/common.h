@@ -22,4 +22,6 @@
         exit(1);                                                               \
     } while (0)
 
+#define ARRAY_SIZE(A) (sizeof(A) / sizeof(*(A)))
+
 #endif // __COMMON_H_
