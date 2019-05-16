@@ -116,7 +116,7 @@ void realize_abstract_instruction(struct abstract_instr *i,
                                   struct x86_instr_vec *result_instrs,
                                   uint32_t *current_offset);
 
-uint8_t *emit_x86_instructions(struct x86_instr_vec *instrs);
+uint8_t *emit_x86_instructions(struct x86_instr_vec *instrs, uint32_t len);
 
 void print_x86_instr(struct x86_instr *i);
 

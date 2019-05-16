@@ -7,6 +7,15 @@
 
 MAKE_VEC(struct x86_instr, x86_instr);
 
+#define WRITE_BYTES(BUF, ...)                                                  \
+    do {                                                                       \
+        for (int _write_bytes_i = 0;                                           \
+             _write_bytes_i < sizeof((uint8_t[]){__VA_ARGS__});                \
+             _write_bytes_i++) {                                               \
+            *(BUF)++ = (uint8_t[]){__VA_ARGS__}[_write_bytes_i];               \
+        }                                                                      \
+    } while (0)
+
 struct x86_instr construct_zero_reg(enum x86_reg_type reg) {
     // if dest is old: [31, c0 + reg]
     // if dest is new: [45, 31, c0 + reg - r8d]
@@ -71,7 +80,7 @@ struct x86_instr construct_mov_stack_reg(uint8_t dest_offset,
     return (struct x86_instr){
         .type = MOV_STACK_REG,
         .size = 4 + x86_reg_is_new[src],
-        .reg_stack = {.dest = src, .src_offset = dest_offset}};
+        .stack_reg = {.src = src, .dest_offset = dest_offset}};
 }
 
 struct x86_instr construct_add_reg_reg(enum x86_reg_type dest,
@@ -152,8 +161,13 @@ static enum x86_reg_type ready_value(struct abstract_storage value,
                                      struct x86_instr_vec *result_instrs,
                                      uint32_t *current_offset) {
     if (value.type == ABSTRACT_STORAGE_IMM) {
-        WRITE_INSTRUCTION(result_instrs, current_offset, construct_mov_reg_imm,
-                          fallback_reg, value.imm);
+        if (value.imm == 0) {
+            WRITE_INSTRUCTION(result_instrs, current_offset, construct_zero_reg,
+                              fallback_reg);
+        } else {
+            WRITE_INSTRUCTION(result_instrs, current_offset,
+                              construct_mov_reg_imm, fallback_reg, value.imm);
+        }
         return fallback_reg;
     }
 
@@ -285,7 +299,133 @@ void realize_abstract_instruction(struct abstract_instr *i,
     }
 }
 
-uint8_t *emit_x86_instructions(struct x86_instr_vec *instrs) { return NULL; }
+static uint8_t *emit_reg_reg_instruction(struct x86_reg_reg i, uint8_t opcode,
+                                         uint8_t *buf) {
+    if (x86_reg_is_new[i.dest]) {
+        if (x86_reg_is_new[i.src]) {
+            // (dest: new, src: new)
+            uint8_t reg_val = 0b11 << 6 | (i.src - R8D) << 3 | i.dest - R8D;
+            WRITE_BYTES(buf, 0x45, opcode, reg_val);
+        } else {
+            // (dest: new, src: old)
+            uint8_t reg_val = 0b11 << 6 | i.src << 3 | i.dest - R8D;
+            WRITE_BYTES(buf, 0x41, opcode, reg_val);
+        }
+    } else {
+        if (x86_reg_is_new[i.src]) {
+            // (dest: old, src: new)
+            uint8_t reg_val = 0b11 << 6 | i.src << 3 | i.dest;
+            WRITE_BYTES(buf, 0x44, opcode, reg_val);
+        } else {
+            // (dest: old, src: old)
+            uint8_t reg_val = 0b11 << 6 | i.src << 3 | i.dest;
+            WRITE_BYTES(buf, opcode, reg_val);
+        }
+    }
+
+    return buf;
+}
+
+static uint32_t emit_x86_instruction(struct x86_instr *i, uint8_t *buf,
+                                     uint32_t bytes_written) {
+    uint8_t *base_buf = buf;
+
+    switch (i->type) {
+    case ZERO_REG:
+        if (x86_reg_is_new[i->reg.reg]) {
+            WRITE_BYTES(buf, 0x45, 0x31, 0xc0 + i->reg.reg - R8D);
+        } else {
+            WRITE_BYTES(buf, 0x31, 0xc0 + i->reg.reg);
+        }
+        break;
+    case MOV_REG_IMM:
+        if (x86_reg_is_new[i->reg_imm.dest]) {
+            WRITE_BYTES(buf, 0x41, 0xb8 + i->reg_imm.dest - R8D);
+        } else {
+            WRITE_BYTES(buf, 0xb8 + i->reg_imm.dest);
+        }
+        *(uint32_t *)buf = i->reg_imm.imm;
+        buf += sizeof(uint32_t);
+        break;
+    case MOV_STACK_IMM:
+        WRITE_BYTES(buf, 0x67, 0xc7, 0x45,
+                    -4 * (int8_t)i->stack_imm.dest_offset);
+        *(uint32_t *)buf = i->stack_imm.imm;
+        buf += sizeof(uint32_t);
+        break;
+    case MOV_REG_REG:
+        buf = emit_reg_reg_instruction(i->reg_reg, 0x89, buf);
+        break;
+    case MOV_REG_STACK:
+        if (x86_reg_is_new[i->reg_stack.dest]) {
+            uint8_t reg_val = 0b01000101 | (i->reg_stack.dest - R8D) << 3;
+            WRITE_BYTES(buf, 0x67, 0x44, 0x8b, reg_val,
+                        -4 * i->reg_stack.src_offset);
+        } else {
+            uint8_t reg_val = 0b01000101 | i->reg_stack.dest << 3;
+            WRITE_BYTES(buf, 0x67, 0x8b, reg_val, -4 * i->reg_stack.src_offset);
+        }
+        break;
+    case MOV_STACK_REG:
+        if (x86_reg_is_new[i->stack_reg.src]) {
+            uint8_t reg_val = 0b01000101 | (i->stack_reg.src - R8D) << 3;
+            WRITE_BYTES(buf, 0x67, 0x44, 0x89, reg_val,
+                        -4 * i->stack_reg.dest_offset);
+        } else {
+            uint8_t reg_val = 0b01000101 | i->stack_reg.src << 3;
+            WRITE_BYTES(buf, 0x67, 0x89, reg_val,
+                        -4 * i->stack_reg.dest_offset);
+        }
+        break;
+    case ADD_REG_REG:
+        buf = emit_reg_reg_instruction(i->reg_reg, 0x01, buf);
+        break;
+    case AND_REG_REG:
+        buf = emit_reg_reg_instruction(i->reg_reg, 0x21, buf);
+        break;
+    case SHR_REG_IMM:
+        if (x86_reg_is_new[i->reg_imm.dest]) {
+            uint8_t reg_val = 0b11101 << 3 | i->reg_imm.dest - R8D;
+            WRITE_BYTES(buf, 0x41, 0xc1, reg_val, i->reg_imm.imm);
+        } else {
+            uint8_t reg_val = 0b11101 << 3 | i->reg_imm.dest;
+            WRITE_BYTES(buf, 0xc1, reg_val, i->reg_imm.imm);
+        }
+        break;
+    case SHL_REG_IMM:
+        if (x86_reg_is_new[i->reg_imm.dest]) {
+            uint8_t reg_val = 0b11100 << 3 | i->reg_imm.dest - R8D;
+            WRITE_BYTES(buf, 0x41, 0xc1, reg_val, i->reg_imm.imm);
+        } else {
+            uint8_t reg_val = 0b11100 << 3 | i->reg_imm.dest;
+            WRITE_BYTES(buf, 0xc1, reg_val, i->reg_imm.imm);
+        }
+        break;
+    case CMP_REG_REG:
+        buf = emit_reg_reg_instruction(i->reg_reg, 0x39, buf);
+        break;
+    case JUMP:
+        WRITE_BYTES(buf, 0x0f, 0x85 - i->jump.is_eq);
+        int32_t off = i->jump.label->code_position - bytes_written - 6;
+        *(uint32_t *)buf = (uint32_t)off;
+        buf += sizeof(uint32_t);
+        break;
+    }
+
+    return buf - base_buf;
+}
+
+uint8_t *emit_x86_instructions(struct x86_instr_vec *instrs, uint32_t len) {
+    uint32_t bytes_written = 0;
+    uint8_t *buf = malloc(len);
+
+    for (int i = 0; i < instrs->len; i++) {
+        bytes_written += emit_x86_instruction(
+            &instrs->data[i], &buf[bytes_written], bytes_written);
+    }
+
+    return buf;
+}
 
 static void print_maybe_resolved_label(struct label *label) {
     if (label->code_position > 0) {
@@ -320,6 +460,7 @@ void print_x86_instr(struct x86_instr *i) {
     case MOV_STACK_REG:
         printf("mov [ebp - %d], %s\n", i->stack_reg.dest_offset,
                x86_reg_type_names[i->stack_reg.src]);
+        break;
     case ADD_REG_REG:
         printf("add %s, %s\n", x86_reg_type_names[i->reg_reg.dest],
                x86_reg_type_names[i->reg_reg.src]);

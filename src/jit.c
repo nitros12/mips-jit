@@ -76,11 +76,19 @@ int main(int argc, char **argv) {
 
     abstract_instr_vec_free(ainstrs);
 
+    uint32_t written_bytes = 0;
+
     for (int i = 0; i < x86_instrs->len; i++) {
         print_x86_instr(&x86_instrs->data[i]);
+        written_bytes += x86_instrs->data[i].size;
     }
 
-    uint8_t *encoded_instrs = emit_x86_instructions(x86_instrs);
+    uint8_t *encoded_instrs = emit_x86_instructions(x86_instrs, written_bytes);
+
+    for (int i = 0; i < written_bytes; i++) {
+        printf("%02hhX", encoded_instrs[i]);
+    }
+    printf("\n");
 
     x86_instr_vec_free(x86_instrs);
 
