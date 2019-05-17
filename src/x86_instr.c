@@ -155,6 +155,13 @@ struct x86_instr construct_jump(bool is_eq, struct label *label) {
         x86_instr_vec_push((RESULT_INSTRS), i__write_instruction);             \
     } while (0)
 
+/**
+ * Load an immediate, stack mapped or register mapped 'value' into a register.
+ * If the value is already present in an x86 register, this is a noop.
+ * Otherwise the value is loaded into the 'fallback_reg' paramater.
+ *
+ * Returns the x86 register the 'value' was loaded into
+ */
 static enum x86_reg_type ready_value(struct abstract_storage value,
                                      struct mips_x86_reg_mapping *map,
                                      enum x86_reg_type fallback_reg,
@@ -181,6 +188,9 @@ static enum x86_reg_type ready_value(struct abstract_storage value,
     return map->mapping[value.reg].x86_reg;
 }
 
+/**
+ * Store a register (src) into a mapped mips register (dest).
+ */
 static void store_value(enum x86_reg_type src, enum reg_type dest,
                         struct mips_x86_reg_mapping *map,
                         struct x86_instr_vec *result_instrs,
@@ -304,6 +314,12 @@ void realize_abstract_instruction(struct abstract_instr *i,
     }
 }
 
+/**
+ * Emit an instruction that is in the format [opcode, 0b11(dest : 3, src : 3)].
+ *
+ * Returns a pointer to after the last written instruction in the array 'buf'
+ *    as such to allow `buf = emit_reg_reg_instruction(i, opcode, buf);`
+ */
 static uint8_t *emit_reg_reg_instruction(struct x86_reg_reg i, uint8_t opcode,
                                          uint8_t *buf) {
     if (x86_reg_is_new[i.dest]) {
@@ -356,8 +372,7 @@ static uint32_t emit_x86_instruction(struct x86_instr *i, uint8_t *buf,
         buf += sizeof(uint32_t);
         break;
     case MOV_STACK_IMM:
-        WRITE_BYTES(buf, 0xc7, 0x45,
-                    4 * (int8_t)i->stack_imm.dest_offset);
+        WRITE_BYTES(buf, 0xc7, 0x45, 4 * (int8_t)i->stack_imm.dest_offset);
         *(uint32_t *)buf = i->stack_imm.imm;
         buf += sizeof(uint32_t);
         break;
@@ -367,8 +382,7 @@ static uint32_t emit_x86_instruction(struct x86_instr *i, uint8_t *buf,
     case MOV_REG_STACK:
         if (x86_reg_is_new[i->reg_stack.dest]) {
             uint8_t reg_val = 0b01000101 | (i->reg_stack.dest - R8D) << 3;
-            WRITE_BYTES(buf, 0x44, 0x8b, reg_val,
-                        4 * i->reg_stack.src_offset);
+            WRITE_BYTES(buf, 0x44, 0x8b, reg_val, 4 * i->reg_stack.src_offset);
         } else {
             uint8_t reg_val = 0b01000101 | i->reg_stack.dest << 3;
             WRITE_BYTES(buf, 0x8b, reg_val, 4 * i->reg_stack.src_offset);
@@ -377,8 +391,7 @@ static uint32_t emit_x86_instruction(struct x86_instr *i, uint8_t *buf,
     case MOV_STACK_REG:
         if (x86_reg_is_new[i->stack_reg.src]) {
             uint8_t reg_val = 0b01000101 | (i->stack_reg.src - R8D) << 3;
-            WRITE_BYTES(buf, 0x44, 0x89, reg_val,
-                        4 * i->stack_reg.dest_offset);
+            WRITE_BYTES(buf, 0x44, 0x89, reg_val, 4 * i->stack_reg.dest_offset);
         } else {
             uint8_t reg_val = 0b01000101 | i->stack_reg.src << 3;
             WRITE_BYTES(buf, 0x89, reg_val, 4 * i->stack_reg.dest_offset);
@@ -422,6 +435,10 @@ static uint32_t emit_x86_instruction(struct x86_instr *i, uint8_t *buf,
     return buf - base_buf;
 }
 
+/**
+ * Emit a vector of x86 instructions into an array of bytes, along with the
+ * header and footer instructions to allow execution of the generated code.
+ */
 struct thunk emit_x86_instructions(struct x86_instr_vec *instrs, uint32_t len) {
     const uint8_t prefix_bytes[] = {
         0x53,             // push rbx
