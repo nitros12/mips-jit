@@ -146,26 +146,31 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Usage: %s <input file>\n", *argv);
     }
 
+    // read and parse mips instructions
     char *instr_buf = read_file_to_buf(argv[1]);
     struct instr_vec *instrs = parse_instructions(instr_buf);
 
     printf("\nparsed instructions:\n");
     print_instrs(instrs);
 
+    // re-encode mips enstructions as abstrac instructions
     struct abstract_instr_vec *ainstrs = translate_instructions(instrs);
     optimise_abstract_instrs(ainstrs);
 
     printf("\nabstract instructions:\n");
     print_abstract_instrs(ainstrs);
 
+    // perform the mapping of mips registers to x86 registers and stack offsets
     struct mips_x86_reg_mapping map = map_regs(ainstrs);
 
+    // compile abstract instructions into x86 instructions
     struct x86_instr_vec *x86_instrs =
         realize_abstract_instructions(&map, ainstrs);
 
     printf("\nx86 instructions:\n");
     print_x86_instrs(x86_instrs);
 
+    // write out the encoded x86 instructions
     uint32_t written_bytes = x86_instrs_size(x86_instrs);
     struct thunk encoded_instrs =
         emit_x86_instructions(x86_instrs, written_bytes);
@@ -173,6 +178,8 @@ int main(int argc, char **argv) {
     printf("\nencoded x86 instructions:\n");
     print_encoded_instrs(encoded_instrs);
 
+    // allocate buffers for final register values & mips registers that were
+    // stack allocated
     uint32_t *regs_buf =
         malloc(sizeof(uint32_t) * (map.num_stack_spots + num_free_x86_regs));
     exec_thunk(encoded_instrs, regs_buf, regs_buf + num_free_x86_regs);
