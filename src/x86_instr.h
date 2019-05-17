@@ -85,6 +85,11 @@ struct x86_instr {
     };
 };
 
+struct thunk {
+    uint8_t *buf;
+    size_t len;
+};
+
 DEFINE_VEC(struct x86_instr, x86_instr);
 
 struct x86_instr construct_zero_reg(enum x86_reg_type reg);
@@ -116,7 +121,7 @@ void realize_abstract_instruction(struct abstract_instr *i,
                                   struct x86_instr_vec *result_instrs,
                                   uint32_t *current_offset);
 
-uint8_t *emit_x86_instructions(struct x86_instr_vec *instrs, uint32_t len);
+struct thunk emit_x86_instructions(struct x86_instr_vec *instrs, uint32_t len);
 
 void print_x86_instr(struct x86_instr *i);
 

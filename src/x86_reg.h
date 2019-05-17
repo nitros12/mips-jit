@@ -1,6 +1,7 @@
 #ifndef __X86_REG_H_
 #define __X86_REG_H_
 
+#include <stdint.h>
 #include <stdbool.h>
 
 /**
@@ -28,6 +29,7 @@ enum __attribute__((__packed__)) x86_reg_type {
  * Array of allocatable x86 registers
  */
 extern const enum x86_reg_type linear_free_x86_reg_map[];
+extern const uint8_t linear_free_x86_reg_inverse_map[];
 extern const int num_free_x86_regs;
 
 extern const char *const x86_reg_type_names[];

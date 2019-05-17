@@ -120,6 +120,7 @@ enum __attribute__((__packed__)) reg_mapping_type {
 };
 
 struct reg_mapping {
+    bool is_mapped;
     enum reg_mapping_type type;
     union {
         enum x86_reg_type x86_reg;

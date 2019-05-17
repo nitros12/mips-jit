@@ -313,12 +313,13 @@ struct mips_x86_reg_mapping map_regs(struct abstract_instr_vec *instrs) {
     qsort(mips_regs, LARGEST_MIPS_REG + 1, sizeof(struct reg_count_tup),
           compare_reg_count_tup);
 
-    struct mips_x86_reg_mapping mapping;
+    struct mips_x86_reg_mapping mapping = {{{0}}};
 
     size_t mips_reg_idx = 0;
 
     for (int x86_reg_idx = 0; x86_reg_idx < num_free_x86_regs; x86_reg_idx++) {
         mapping.mapping[mips_regs[mips_reg_idx++].reg] = (struct reg_mapping){
+            .is_mapped = true,
             .type = X86_REG_MAPPED,
             .x86_reg = linear_free_x86_reg_map[x86_reg_idx]};
     }
@@ -326,8 +327,10 @@ struct mips_x86_reg_mapping map_regs(struct abstract_instr_vec *instrs) {
     uint8_t stack_offset = 0;
     for (; mips_reg_idx < LARGEST_MIPS_REG && mips_regs[mips_reg_idx].count > 0;
          mips_reg_idx++, stack_offset++) {
-        mapping.mapping[mips_regs[mips_reg_idx].reg] = (struct reg_mapping){
-            .type = STACK_MAPPED, .stack_offset = stack_offset};
+        mapping.mapping[mips_regs[mips_reg_idx].reg] =
+            (struct reg_mapping){.is_mapped = true,
+                                 .type = STACK_MAPPED,
+                                 .stack_offset = stack_offset};
     }
 
     mapping.num_stack_spots = stack_offset;
