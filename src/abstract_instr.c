@@ -302,7 +302,8 @@ struct mips_x86_reg_mapping map_regs(struct abstract_instr_vec *instrs) {
     struct reg_count_tup mips_regs[LARGEST_MIPS_REG + 1] = {{0}};
 
     // NOTE: REG_ZERO should never appear in an abstract instruction
-    for (enum reg_type reg = SMALLEST_MIPS_REG; reg < LARGEST_MIPS_REG; reg++) {
+    for (enum reg_type reg = SMALLEST_MIPS_REG; reg <= LARGEST_MIPS_REG;
+         reg++) {
         mips_regs[reg].reg = reg;
     }
 
@@ -318,6 +319,9 @@ struct mips_x86_reg_mapping map_regs(struct abstract_instr_vec *instrs) {
     size_t mips_reg_idx = 0;
 
     for (int x86_reg_idx = 0; x86_reg_idx < num_free_x86_regs; x86_reg_idx++) {
+        DEBUG_LOG("mapping %s to register %s\n",
+                  reg_type_names[mips_regs[mips_reg_idx].reg],
+                  x86_reg_type_names[linear_free_x86_reg_map[x86_reg_idx]]);
         mapping.mapping[mips_regs[mips_reg_idx++].reg] = (struct reg_mapping){
             .is_mapped = true,
             .type = X86_REG_MAPPED,
@@ -325,8 +329,11 @@ struct mips_x86_reg_mapping map_regs(struct abstract_instr_vec *instrs) {
     }
 
     uint8_t stack_offset = 0;
-    for (; mips_reg_idx < LARGEST_MIPS_REG && mips_regs[mips_reg_idx].count > 0;
+    for (;
+         mips_reg_idx <= LARGEST_MIPS_REG && mips_regs[mips_reg_idx].count > 0;
          mips_reg_idx++, stack_offset++) {
+        DEBUG_LOG("mapping %s to stack offset %d\n",
+                  reg_type_names[mips_regs[mips_reg_idx].reg], stack_offset);
         mapping.mapping[mips_regs[mips_reg_idx].reg] =
             (struct reg_mapping){.is_mapped = true,
                                  .type = STACK_MAPPED,

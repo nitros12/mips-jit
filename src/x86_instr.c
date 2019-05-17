@@ -68,7 +68,7 @@ struct x86_instr construct_mov_reg_stack(enum x86_reg_type dest,
 
     return (struct x86_instr){
         .type = MOV_REG_STACK,
-        .size = 4 + x86_reg_is_new[dest],
+        .size = 3 + x86_reg_is_new[dest],
         .reg_stack = {.dest = dest, .src_offset = src_offset}};
 }
 
@@ -79,7 +79,7 @@ struct x86_instr construct_mov_stack_reg(uint8_t dest_offset,
 
     return (struct x86_instr){
         .type = MOV_STACK_REG,
-        .size = 4 + x86_reg_is_new[src],
+        .size = 3 + x86_reg_is_new[src],
         .stack_reg = {.src = src, .dest_offset = dest_offset}};
 }
 
@@ -233,6 +233,7 @@ void realize_abstract_instruction(struct abstract_instr *i,
         break;
     }
     case ABSTRACT_INSTR_MOV: {
+        print_abstract_instr(i);
         if (i->mov.source.type != ABSTRACT_STORAGE_IMM) {
             enum x86_reg_type src = ready_value(i->mov.source, map, EAX,
                                                 result_instrs, current_offset);
@@ -240,7 +241,7 @@ void realize_abstract_instruction(struct abstract_instr *i,
             break;
         }
 
-        // special case for moving immediates
+        // special case for moving immediates into registers
         if (map->mapping[i->mov.dest].type == X86_REG_MAPPED) {
             if (i->mov.source.imm == 0) {
                 // zeroing register
@@ -253,6 +254,11 @@ void realize_abstract_instruction(struct abstract_instr *i,
                     result_instrs, current_offset, construct_mov_reg_imm,
                     map->mapping[i->mov.dest].x86_reg, i->mov.source.imm);
             }
+        } else {
+            // moving imm into stack loc
+            WRITE_INSTRUCTION(
+                result_instrs, current_offset, construct_mov_stack_imm,
+                map->mapping[i->mov.dest].stack_offset, i->mov.source.imm);
         }
         break;
     }
@@ -351,7 +357,7 @@ static uint32_t emit_x86_instruction(struct x86_instr *i, uint8_t *buf,
         buf += sizeof(uint32_t);
         break;
     case MOV_STACK_IMM:
-        WRITE_BYTES(buf, 0x67, 0xc7, 0x45,
+        WRITE_BYTES(buf, 0xc7, 0x45,
                     4 * (int8_t)i->stack_imm.dest_offset);
         *(uint32_t *)buf = i->stack_imm.imm;
         buf += sizeof(uint32_t);
@@ -362,21 +368,21 @@ static uint32_t emit_x86_instruction(struct x86_instr *i, uint8_t *buf,
     case MOV_REG_STACK:
         if (x86_reg_is_new[i->reg_stack.dest]) {
             uint8_t reg_val = 0b01000101 | (i->reg_stack.dest - R8D) << 3;
-            WRITE_BYTES(buf, 0x67, 0x44, 0x8b, reg_val,
+            WRITE_BYTES(buf, 0x44, 0x8b, reg_val,
                         4 * i->reg_stack.src_offset);
         } else {
             uint8_t reg_val = 0b01000101 | i->reg_stack.dest << 3;
-            WRITE_BYTES(buf, 0x67, 0x8b, reg_val, 4 * i->reg_stack.src_offset);
+            WRITE_BYTES(buf, 0x8b, reg_val, 4 * i->reg_stack.src_offset);
         }
         break;
     case MOV_STACK_REG:
         if (x86_reg_is_new[i->stack_reg.src]) {
             uint8_t reg_val = 0b01000101 | (i->stack_reg.src - R8D) << 3;
-            WRITE_BYTES(buf, 0x67, 0x44, 0x89, reg_val,
+            WRITE_BYTES(buf, 0x44, 0x89, reg_val,
                         4 * i->stack_reg.dest_offset);
         } else {
             uint8_t reg_val = 0b01000101 | i->stack_reg.src << 3;
-            WRITE_BYTES(buf, 0x67, 0x89, reg_val, 4 * i->stack_reg.dest_offset);
+            WRITE_BYTES(buf, 0x89, reg_val, 4 * i->stack_reg.dest_offset);
         }
         break;
     case ADD_REG_REG:
@@ -462,6 +468,8 @@ struct thunk emit_x86_instructions(struct x86_instr_vec *instrs, uint32_t len) {
     const uint32_t prefix_len = sizeof(prefix_bytes);
     const uint32_t postfix_len = sizeof(postfix_bytes);
 
+    printf("function size: %d\n", len);
+
     uint8_t *buf = malloc(prefix_len + len + postfix_len);
 
     uint32_t bytes_written = 0;
@@ -506,7 +514,7 @@ void print_x86_instr(struct x86_instr *i) {
                i->reg_imm.imm);
         break;
     case MOV_STACK_IMM:
-        printf("mov [ebp + %d], %d\n", i->stack_imm.dest_offset,
+        printf("mov [ebp + %d], %d\n", 4 * i->stack_imm.dest_offset,
                i->stack_imm.imm);
         break;
     case MOV_REG_REG:
@@ -515,10 +523,10 @@ void print_x86_instr(struct x86_instr *i) {
         break;
     case MOV_REG_STACK:
         printf("mov %s, [ebp + %d]\n", x86_reg_type_names[i->reg_stack.dest],
-               i->reg_stack.src_offset);
+               4 * i->reg_stack.src_offset);
         break;
     case MOV_STACK_REG:
-        printf("mov [ebp + %d], %s\n", i->stack_reg.dest_offset,
+        printf("mov [ebp + %d], %s\n", 4 * i->stack_reg.dest_offset,
                x86_reg_type_names[i->stack_reg.src]);
         break;
     case ADD_REG_REG:

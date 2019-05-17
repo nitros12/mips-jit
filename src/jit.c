@@ -50,7 +50,7 @@ static void exec_thunk(struct thunk th, uint32_t *mapped_regs_store,
 
 static void print_mapping(struct mips_x86_reg_mapping *map, uint32_t *regs_buf,
                           uint32_t *unmapped_regs_buf) {
-    for (enum reg_type i = SMALLEST_MIPS_REG; i < LARGEST_MIPS_REG; i++) {
+    for (enum reg_type i = SMALLEST_MIPS_REG; i <= LARGEST_MIPS_REG; i++) {
         if (!map->mapping[i].is_mapped) {
             continue;
         }
@@ -121,26 +121,32 @@ static uint32_t x86_instrs_size(struct x86_instr_vec *x86_instrs) {
     return written_bytes;
 }
 
+char *read_file_to_buf(const char *const fname) {
+    struct stat st;
+    if (stat(fname, &st)) {
+        perror("Failed statting source file");
+    }
+
+    char *file_buf = malloc(st.st_size + 1);
+
+    FILE *file = fopen(fname, "r");
+    if (!file) {
+        perror("Failed opening source file");
+    }
+
+    fread(file_buf, st.st_size, 1, file);
+    file_buf[st.st_size] = '\0';
+    fclose(file);
+
+    return file_buf;
+}
+
 int main(int argc, char **argv) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <input file>\n", *argv);
     }
 
-    struct stat st;
-    if (stat(argv[1], &st)) {
-        perror("Failed statting source file");
-    }
-
-    char *instr_buf = malloc(st.st_size);
-
-    FILE *instr_file = fopen(argv[1], "r");
-    if (!instr_file) {
-        perror("Failed opening source file");
-    }
-
-    fread(instr_buf, st.st_size, 1, instr_file);
-    fclose(instr_file);
-
+    char *instr_buf = read_file_to_buf(argv[1]);
     struct instr_vec *instrs = parse_instructions(instr_buf);
 
     printf("\nparsed instructions:\n");
