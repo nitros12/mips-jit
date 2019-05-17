@@ -53,9 +53,9 @@ enum __attribute__((__packed__)) abstract_instr_binop_op {
 extern const char *const abstract_instr_binop_op_names[];
 
 struct abstract_instr_binop {
+    struct abstract_storage lhs, rhs;
     enum reg_type dest;
     enum abstract_instr_binop_op op;
-    struct abstract_storage lhs, rhs;
 };
 
 enum __attribute__((__packed__)) abstract_instr_branch_test_type {

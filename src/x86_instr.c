@@ -290,9 +290,9 @@ void realize_abstract_instruction(struct abstract_instr *i,
     }
     case ABSTRACT_INSTR_BRANCH: {
         enum x86_reg_type lhs =
-            ready_value(i->binop.lhs, map, EAX, result_instrs, current_offset);
+            ready_value(i->branch.lhs, map, EAX, result_instrs, current_offset);
         enum x86_reg_type rhs =
-            ready_value(i->binop.rhs, map, ECX, result_instrs, current_offset);
+            ready_value(i->branch.rhs, map, ECX, result_instrs, current_offset);
 
         WRITE_INSTRUCTION(result_instrs, current_offset, construct_cmp_reg_reg,
                           lhs, rhs);
