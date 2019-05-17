@@ -1,4 +1,5 @@
 addi $s0 $zero 32767
+sll $s0 $s0 16
 loop: addi $s0 $s0 -1
 bne $s0 $zero loop
 addi $s1 $zero 1234
