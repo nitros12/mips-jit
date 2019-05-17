@@ -6,8 +6,8 @@
 #include "instr.h"
 #include "label.h"
 #include "mips_reg.h"
-#include "x86_reg.h"
 #include "vec.h"
+#include "x86_reg.h"
 
 /**
  * Abstract instructions
@@ -29,11 +29,11 @@ enum __attribute__((__packed__)) abstract_storage_type {
 extern const char *const abstract_storage_type_names[];
 
 struct abstract_storage {
-    enum abstract_storage_type type;
     union {
         uint32_t imm;
         enum reg_type reg;
     };
+    enum abstract_storage_type type;
 };
 
 enum __attribute__((__packed__)) abstract_instr_type {

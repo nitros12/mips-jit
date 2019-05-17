@@ -216,42 +216,34 @@ struct instr parse_instr(const char *instr) {
     switch (instr_char_sum) {
     case 333:
         return (struct instr){.type = INSTR_NOP, .label = label};
-        break;
     case 297:
         return (struct instr){.type = INSTR_ADD,
                               .label = label,
                               .reg_instr = parse_instr_reg(instr)};
-        break;
     case 402:
         return (struct instr){.type = INSTR_ADDI,
                               .label = label,
                               .imm_instr = parse_instr_imm(instr)};
-        break;
     case 412:
         return (struct instr){.type = INSTR_ANDI,
                               .label = label,
                               .imm_instr = parse_instr_imm(instr)};
-        break;
     case 337:
         return (struct instr){.type = INSTR_SRL,
                               .label = label,
                               .imm_instr = parse_instr_imm(instr)};
-        break;
     case 331:
         return (struct instr){.type = INSTR_SLL,
                               .label = label,
                               .imm_instr = parse_instr_imm(instr)};
-        break;
     case 312:
         return (struct instr){.type = INSTR_BEQ,
                               .label = label,
                               .branch_instr = parse_instr_branch(instr)};
-        break;
     case 309:
         return (struct instr){.type = INSTR_BNE,
                               .label = label,
                               .branch_instr = parse_instr_branch(instr)};
-        break;
     default:
         RUNTIME_ERROR("Invalid instruction: %s", initial_instr);
     }

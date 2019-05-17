@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "mips_reg.h"
 #include "label.h"
+#include "mips_reg.h"
 #include "vec.h"
 
 // representations for instructions
@@ -44,18 +44,18 @@ struct instr_imm {
 
 // branch to label instrs
 struct instr_branch {
-    enum reg_type t, s;
     struct label *label;
+    enum reg_type t, s;
 };
 
 struct instr {
     enum instr_type type;
-    struct label *label;
     union {
         struct instr_reg reg_instr;
         struct instr_imm imm_instr;
         struct instr_branch branch_instr;
     };
+    struct label *label;
 };
 
 void print_instr(struct instr *i);

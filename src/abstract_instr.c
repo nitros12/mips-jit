@@ -260,8 +260,9 @@ static int compare_reg_count_tup(const void *a_, const void *b_) {
     return (a->count < b->count) - (a->count > b->count);
 }
 
-void count_instr_regs(struct abstract_instr *i,
-                      struct reg_count_tup mips_regs[LARGEST_MIPS_REG + 1]) {
+static void
+count_instr_regs(struct abstract_instr *i,
+                 struct reg_count_tup mips_regs[LARGEST_MIPS_REG + 1]) {
     switch (i->type) {
     case ABSTRACT_INSTR_BINOP:
         mips_regs[i->binop.dest].count++;
