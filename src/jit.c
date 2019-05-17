@@ -61,7 +61,7 @@ static void print_mapping(struct mips_x86_reg_mapping *map, uint32_t *regs_buf,
                    regs_buf[linear_free_x86_reg_inverse_map[reg]]);
         } else {
             uint8_t offset = map->mapping[i].stack_offset;
-            printf("%s = [STACK + %d] = %u\n", reg_type_names[i], offset,
+            printf("%s = [STACK + %d] = %u\n", reg_type_names[i], 4 * offset,
                    unmapped_regs_buf[offset]);
         }
     }
