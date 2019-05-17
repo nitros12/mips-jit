@@ -4,7 +4,7 @@
 # @file
 # @version 0.1
 
-CC = clang
+# CC = clang
 
 EXE = mips_jit
 
@@ -17,7 +17,7 @@ SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 CFLAGS += -Wall -flto
-LDFLAGS += -fuse-ld=lld
+# LDFLAGS += -fuse-ld=lld
 
 .PHONY: ensuredirs all clean
 

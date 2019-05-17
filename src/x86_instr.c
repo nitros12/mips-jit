@@ -309,11 +309,11 @@ static uint8_t *emit_reg_reg_instruction(struct x86_reg_reg i, uint8_t opcode,
     if (x86_reg_is_new[i.dest]) {
         if (x86_reg_is_new[i.src]) {
             // (dest: new, src: new)
-            uint8_t reg_val = 0b11 << 6 | (i.src - R8D) << 3 | i.dest - R8D;
+            uint8_t reg_val = 0b11 << 6 | (i.src - R8D) << 3 | (i.dest - R8D);
             WRITE_BYTES(buf, 0x45, opcode, reg_val);
         } else {
             // (dest: new, src: old)
-            uint8_t reg_val = 0b11 << 6 | i.src << 3 | i.dest - R8D;
+            uint8_t reg_val = 0b11 << 6 | i.src << 3 | (i.dest - R8D);
             WRITE_BYTES(buf, 0x41, opcode, reg_val);
         }
     } else {
@@ -392,7 +392,7 @@ static uint32_t emit_x86_instruction(struct x86_instr *i, uint8_t *buf,
         break;
     case SHR_REG_IMM:
         if (x86_reg_is_new[i->reg_imm.dest]) {
-            uint8_t reg_val = 0b11101 << 3 | i->reg_imm.dest - R8D;
+            uint8_t reg_val = 0b11101 << 3 | (i->reg_imm.dest - R8D);
             WRITE_BYTES(buf, 0x41, 0xc1, reg_val, i->reg_imm.imm);
         } else {
             uint8_t reg_val = 0b11101 << 3 | i->reg_imm.dest;
@@ -401,7 +401,7 @@ static uint32_t emit_x86_instruction(struct x86_instr *i, uint8_t *buf,
         break;
     case SHL_REG_IMM:
         if (x86_reg_is_new[i->reg_imm.dest]) {
-            uint8_t reg_val = 0b11100 << 3 | i->reg_imm.dest - R8D;
+            uint8_t reg_val = 0b11100 << 3 | (i->reg_imm.dest - R8D);
             WRITE_BYTES(buf, 0x41, 0xc1, reg_val, i->reg_imm.imm);
         } else {
             uint8_t reg_val = 0b11100 << 3 | i->reg_imm.dest;

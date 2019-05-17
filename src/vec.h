@@ -32,7 +32,7 @@
     void NAME##_vec_push(struct NAME##_vec *vec, TYPE i) {                     \
         if (vec->len == vec->cap) {                                            \
             vec->cap <<= 1;                                                    \
-            vec->data = reallocarray(vec->data, vec->cap, sizeof(TYPE));       \
+            vec->data = realloc(vec->data, vec->cap * sizeof(TYPE));           \
         }                                                                      \
                                                                                \
         vec->data[vec->len++] = i;                                             \
