@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
     // allocate buffers for final register values & mips registers that were
     // stack allocated
     uint32_t *regs_buf =
-        malloc(sizeof(uint32_t) * (map.num_stack_spots + num_free_x86_regs));
+        calloc(map.num_stack_spots + num_free_x86_regs, sizeof(uint32_t));
     exec_thunk(encoded_instrs, regs_buf, regs_buf + num_free_x86_regs);
 
     printf("\nfinal register values:\n");
