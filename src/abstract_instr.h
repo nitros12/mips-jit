@@ -31,7 +31,7 @@ extern const char *const abstract_storage_type_names[];
 struct abstract_storage {
     enum abstract_storage_type type;
     union {
-        uint16_t imm;
+        uint32_t imm;
         enum reg_type reg;
     };
 };

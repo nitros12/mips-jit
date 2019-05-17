@@ -23,7 +23,7 @@ struct x86_instr construct_zero_reg(enum x86_reg_type reg) {
         .type = ZERO_REG, .size = 2 + x86_reg_is_new[reg], .reg = {.reg = reg}};
 }
 
-struct x86_instr construct_mov_reg_imm(enum x86_reg_type dest, uint16_t imm) {
+struct x86_instr construct_mov_reg_imm(enum x86_reg_type dest, uint32_t imm) {
     // if dest is old: [b8 + dest, imm.0, imm.1, imm.2, imm.3]
     // if dest is new: [41, b8 + dest - r8d, imm.0, imm.1, imm.2, imm.3]
 
@@ -32,7 +32,7 @@ struct x86_instr construct_mov_reg_imm(enum x86_reg_type dest, uint16_t imm) {
                               .reg_imm = {.dest = dest, .imm = imm}};
 }
 
-struct x86_instr construct_mov_stack_imm(uint8_t dest_offset, uint16_t imm) {
+struct x86_instr construct_mov_stack_imm(uint8_t dest_offset, uint32_t imm) {
     // NOTE: for memory offset instrs, make sure value is converted to a signed
     // type and inverted
     // [67, c7, 45, -dest_offset, imm.0, imm.1, imm.2, imm.3]
@@ -233,7 +233,6 @@ void realize_abstract_instruction(struct abstract_instr *i,
         break;
     }
     case ABSTRACT_INSTR_MOV: {
-        print_abstract_instr(i);
         if (i->mov.source.type != ABSTRACT_STORAGE_IMM) {
             enum x86_reg_type src = ready_value(i->mov.source, map, EAX,
                                                 result_instrs, current_offset);

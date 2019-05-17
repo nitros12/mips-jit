@@ -43,12 +43,12 @@ struct x86_reg {
 
 struct x86_reg_imm {
     enum x86_reg_type dest;
-    uint16_t imm;
+    uint32_t imm;
 };
 
 struct x86_stack_imm {
     uint8_t dest_offset;
-    uint16_t imm;
+    uint32_t imm;
 };
 
 struct x86_reg_reg {
@@ -93,8 +93,8 @@ struct thunk {
 DEFINE_VEC(struct x86_instr, x86_instr);
 
 struct x86_instr construct_zero_reg(enum x86_reg_type reg);
-struct x86_instr construct_mov_reg_imm(enum x86_reg_type dest, uint16_t imm);
-struct x86_instr construct_mov_stack_imm(uint8_t dest_offset, uint16_t imm);
+struct x86_instr construct_mov_reg_imm(enum x86_reg_type dest, uint32_t imm);
+struct x86_instr construct_mov_stack_imm(uint8_t dest_offset, uint32_t imm);
 struct x86_instr construct_mov_reg_reg(enum x86_reg_type dest,
                                        enum x86_reg_type src);
 struct x86_instr construct_mov_reg_stack(enum x86_reg_type dest,

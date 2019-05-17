@@ -33,6 +33,7 @@ static void exec_thunk(struct thunk th, uint32_t *mapped_regs_store,
     void *buf = mmap(NULL, th.len, PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
     if (buf == MAP_FAILED) {
         perror("Mapping buffer failed");
+        exit(EXIT_FAILURE);
     }
 
     memcpy(buf, th.buf, th.len);
@@ -40,6 +41,7 @@ static void exec_thunk(struct thunk th, uint32_t *mapped_regs_store,
     // then change it to rx
     if (mprotect(buf, th.len, PROT_READ | PROT_EXEC) == -1) {
         perror("Failed remapping w buffer to rx");
+        exit(EXIT_FAILURE);
     }
 
     // and call it
@@ -125,6 +127,7 @@ char *read_file_to_buf(const char *const fname) {
     struct stat st;
     if (stat(fname, &st)) {
         perror("Failed statting source file");
+        exit(EXIT_FAILURE);
     }
 
     char *file_buf = malloc(st.st_size + 1);
@@ -132,6 +135,7 @@ char *read_file_to_buf(const char *const fname) {
     FILE *file = fopen(fname, "r");
     if (!file) {
         perror("Failed opening source file");
+        exit(EXIT_FAILURE);
     }
 
     fread(file_buf, st.st_size, 1, file);

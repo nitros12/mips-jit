@@ -81,7 +81,7 @@ struct abstract_instr_vec *translate_instructions(struct instr_vec *instrs) {
                                  .op = ABSTRACT_INSTR_BINOP_ADD,
                                  .lhs = translate_reg(instr.imm_instr.s),
                                  .rhs = {.type = ABSTRACT_STORAGE_IMM,
-                                         .imm = instr.imm_instr.imm},
+                                         .imm = (int16_t)instr.imm_instr.imm},
                              }});
             break;
         case INSTR_ANDI:
@@ -198,7 +198,7 @@ static void print_abstract_storage(struct abstract_storage s) {
         printf("<reg: %s>", reg_type_names[s.reg]);
         break;
     case ABSTRACT_STORAGE_IMM:
-        printf("<imm: %d>", s.imm);
+        printf("<imm: %u>", s.imm);
         break;
         /* case ABSTRACT_STORAGE_MAPPED_REG: */
         /*     if (s.mapped_reg.mapped_to_reg) { */
