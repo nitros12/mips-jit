@@ -7,11 +7,18 @@
 #include "label_storage.h"
 #include "mips_reg.h"
 
+static const char *ensure_not_terminated(const char *s) {
+    if (!*s) {
+        RUNTIME_ERROR("Unexpected end of string: %p", (void *)s);
+    }
+
+    return s;
+}
 /**
  * Returns the position of the first non-whitespace character in a string.
  */
 static void eat_whitespace(const char **s) {
-    while (isspace(**s)) {
+    while (**s && isspace(**s)) {
         (*s)++;
     }
 }
@@ -24,7 +31,7 @@ static struct string_slice parse_word(const char **s) {
     const char *start = *s;
     size_t len = 0;
 
-    while (!isspace(**s) && **s) {
+    while (**s && !isspace(**s)) {
         len++;
         (*s)++;
     }
@@ -33,6 +40,7 @@ static struct string_slice parse_word(const char **s) {
 }
 
 static enum reg_type parse_reg_type(const char **instr) {
+    ensure_not_terminated(*instr);
     const char *initial_instr = *instr;
 
 #define BAD_REG() RUNTIME_ERROR("Invalid register: %s", initial_instr)
@@ -130,9 +138,11 @@ static enum reg_type parse_reg_type(const char **instr) {
 static struct instr_reg parse_instr_reg(const char *instr) {
     enum reg_type d = parse_reg_type(&instr);
     eat_whitespace(&instr);
+    ensure_not_terminated(instr);
 
     enum reg_type s = parse_reg_type(&instr);
     eat_whitespace(&instr);
+    ensure_not_terminated(instr);
 
     enum reg_type t = parse_reg_type(&instr);
 
@@ -146,9 +156,11 @@ static struct instr_reg parse_instr_reg(const char *instr) {
 static struct instr_imm parse_instr_imm(const char *instr) {
     enum reg_type t = parse_reg_type(&instr);
     eat_whitespace(&instr);
+    ensure_not_terminated(instr);
 
     enum reg_type s = parse_reg_type(&instr);
     eat_whitespace(&instr);
+    ensure_not_terminated(instr);
 
     uint16_t imm = atoi(instr);
 
@@ -162,9 +174,11 @@ static struct instr_imm parse_instr_imm(const char *instr) {
 static struct instr_branch parse_instr_branch(const char *instr) {
     enum reg_type t = parse_reg_type(&instr);
     eat_whitespace(&instr);
+    ensure_not_terminated(instr);
 
     enum reg_type s = parse_reg_type(&instr);
     eat_whitespace(&instr);
+    ensure_not_terminated(instr);
 
     struct label *label = add_label(parse_word(&instr));
 
@@ -180,10 +194,12 @@ static struct instr_branch parse_instr_branch(const char *instr) {
  */
 struct instr parse_instr(const char *instr) {
     // eat all preceeding whitespace
+    ensure_not_terminated(instr);
     const char *initial_instr = instr;
     DEBUG_LOG("instr: %s", instr);
 
     eat_whitespace(&instr);
+    ensure_not_terminated(instr);
 
     DEBUG_LOG("instr: %s", instr);
     // first search for a colon, if so parse a label
@@ -198,6 +214,7 @@ struct instr parse_instr(const char *instr) {
         // instruction
         instr = label_ptr + 1;
         eat_whitespace(&instr);
+        ensure_not_terminated(instr);
     }
 
     // to find what instruction we're at, we'll sum the characters until we get
@@ -207,10 +224,11 @@ struct instr parse_instr(const char *instr) {
     DEBUG_LOG("instr: %s", instr);
     int instr_char_sum = 0;
     while (!isspace(*instr)) {
-        instr_char_sum += *instr++;
+        instr_char_sum += *ensure_not_terminated(instr++);
     }
 
     eat_whitespace(&instr);
+    ensure_not_terminated(instr);
     DEBUG_LOG("instr: %s", instr);
 
     switch (instr_char_sum) {
